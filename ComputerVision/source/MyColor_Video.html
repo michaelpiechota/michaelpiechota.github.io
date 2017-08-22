@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../build/tracking-min.js"></script>
+  <script src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
+  <script src="assets/color_camera_gui.js"></script>
+  <link rel="stylesheet" href="assets/css/backButton.css" />
+  <style>
+    #MyColor_Video{
+      width: 800;
+      height: 500;
+      padding-left: 300px;
+      padding-top: 100px;
+      position: relative;
+    }
+    video, canvas {
+      position: absolute;
+    }
+    a{
+      padding-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <!--Back Button-->
+    <a href="index.html">
+      <div class="btn">
+        <span>Back</span>
+        <div class="dot"></div>
+      </div>
+    </a>
+    
+    <!-- COLOR_VIDEO CODE START -->
+    <div id="MyColor_Video"> 
+      <video id="video" width="800" height="450" preload autoplay loop muted >
+        <source src="assets/Yellow_Traffic.mp4" type="video/mp4">
+      </video>
+      <canvas id="canvas" width="800" height="500"></canvas>
+    </div>
+    <!-- END -->
+    
+  <script>
+    window.onload = function() {
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+
+      tracking.ColorTracker.registerColor('purple', function(r, g, b) {
+        var dx = r - 120;
+        var dy = g - 60;
+        var dz = b - 210;
+
+        if ((b - g) >= 100 && (r - g) >= 60) {
+          return true;
+        }
+        return dx * dx + dy * dy + dz * dz < 3500;
+      });
+
+      var tracker = new tracking.ColorTracker(['yellow', 'purple']);
+      tracker.setMinDimension(5);
+
+      tracking.track('#video', tracker);
+
+      tracker.on('track', function(event) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        event.data.forEach(function(rect) {
+          if (rect.color === 'custom') {
+            rect.color = tracker.customColor;
+          }
+
+          context.strokeStyle = rect.color;
+          context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+          context.font = '11px Helvetica';
+          context.fillStyle = "#fff";
+          context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
+          context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
+        });
+      });
+
+      initGUIControllers(tracker);
+    };
+  </script>
+
+</body>
+</html>
